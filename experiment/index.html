@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Badanie Kognitywistyczne - UŁ</title>
+    <!-- Biblioteka Supabase z CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- EKRAN 1: Powitanie i Ankieta -->
+    <div id="welcome-screen" class="screen active">
+        <h1>Badanie postrzegania wizualnego</h1>
+        <p>Prosimy o wypełnienie krótkiej metryczki przed rozpoczęciem badania.</p>
+        
+        <form id="demographics-form">
+            <div class="form-group">
+                <label for="age">Wiek:</label>
+                <select id="age" name="age" required>
+                    <option value="" disabled selected>Wybierz...</option>
+                    <option value="<18">Poniżej 18</option>
+                    <option value="18-24">18 - 24</option>
+                    <option value="25-34">25 - 34</option>
+                    <option value="35-44">35 - 44</option>
+                    <option value="45-54">45 - 54</option>
+                    <option value="55+">55 i więcej</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="gender">Płeć:</label>
+                <select id="gender" name="gender" required>
+                    <option value="" disabled selected>Wybierz...</option>
+                    <option value="F">Kobieta</option>
+                    <option value="M">Mężczyzna</option>
+                    <option value="O">Inna</option>
+                    <option value="X">Nie chcę podawać</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="residence">Miejsce zamieszkania:</label>
+                <select id="residence" name="residence" required>
+                    <option value="" disabled selected>Wybierz...</option>
+                    <option value="wies">Wieś</option>
+                    <option value="miasto_<50k">Miasto do 50 tys. mieszkańców</option>
+                    <option value="miasto_50-200k">Miasto 50-200 tys. mieszkańców</option>
+                    <option value="miasto_200-500k">Miasto 200-500 tys. mieszkańców</option>
+                    <option value="miasto_>500k">Miasto powyżej 500 tys. mieszkańców</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="handedness">Ręczność:</label>
+                <select id="handedness" name="handedness" required>
+                    <option value="" disabled selected>Wybierz...</option>
+                    <option value="right">Praworęczny/a</option>
+                    <option value="left">Leworęczny/a</option>
+                    <option value="ambidextrous">Oburęczny/a</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="vision">Wzrok:</label>
+                <select id="vision" name="vision" required>
+                    <option value="" disabled selected>Wybierz...</option>
+                    <option value="normal">Bez wad</option>
+                    <option value="corrected">Wada skorygowana (okulary/soczewki)</option>
+                    <option value="uncorrected">Wada nieskorygowana</option>
+                </select>
+            </div>
+            
+            <!-- Typ przycisku zmieniony na submit, by wymusić walidację formularza -->
+            <button type="submit" id="start-btn">Zgadzam się – Rozpocznij w pełnym oknie</button>
+        </form>
+    </div>
+
+    <!-- Ekran 2: Badanie -->
+    <div id="experiment-screen" class="screen">
+        <div id="fullscreen-warning" class="hidden">
+            <h2>Badanie wstrzymane!</h2>
+            <p>Wyszedłeś z trybu pełnoekranowego.</p>
+            <button id="resume-btn">Powrót do badania</button>
+        </div>
+
+        <!-- Przestrzeń robocza badania -->
+        <div id="workspace">
+            <div id="target-left" class="target">Opcja A</div>
+            <div id="target-right" class="target">Opcja B</div>
+            
+            <img id="stimulus-image" src="" alt="Bodziec testowy" class="hidden">
+            <!-- Tekst kalibracji -->
+            <h2 id="stimulus-text" class="hidden"></h2>
+            
+            <button id="next-trial-btn" class="hidden">Rozpocznij próbę</button>
+        </div>
+    </div>
+
+    <!-- EKRAN 3: Podziękowanie (Zakończenie) -->
+    <div id="thankyou-screen" class="screen">
+        <h1>Dziękujemy za udział w badaniu!</h1>
+        <p>Twoje odpowiedzi zostały zapisane pomyślnie.</p>
+        <p>Możesz już zamknąć tę kartę przeglądarki.</p>
+    </div>
+
+    <!-- Główny plik JS jako moduł -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

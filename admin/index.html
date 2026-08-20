@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Badacza - Mousetracking</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+    <!-- EKRAN LOGOWANIA -->
+    <div id="login-screen" class="container active">
+        <div class="login-box">
+            <h2>Logowanie Badacza</h2>
+            <form id="login-form">
+                <div class="form-group"><label>E-mail:</label><input type="email" id="email" required></div>
+                <div class="form-group"><label>Hasło:</label><input type="password" id="password" required></div>
+                <p id="login-error" class="error-msg hidden"></p>
+                <button type="submit">Zaloguj się</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- DASHBOARD BADACZA -->
+    <div id="dashboard-screen" class="dashboard-container hidden">
+        <header class="topbar">
+            <div style="display: flex; gap: 20px; align-items: center;">
+                <h1>Panel Analityczny</h1>
+                <nav class="main-nav">
+                    <button id="nav-dashboard" class="nav-btn active">Drzewo Wyników</button>
+                    <button id="nav-create" class="nav-btn">Kreator Badania</button>
+                </nav>
+            </div>
+            <button id="logout-btn" class="btn-secondary">Wyloguj</button>
+        </header>
+
+        <div class="workspace">
+            <!-- WIDOK 1: DASHBOARD (Stary kod ukryty w divie) -->
+            <div id="view-dashboard" class="workspace-view active">
+                <aside class="sidebar">
+                    <h3>Baza Danych</h3>
+                    <div id="tree-container"><p class="loading-text">Ładowanie struktury...</p></div>
+                </aside>
+                <main class="viewer">
+                    <section id="details-panel" class="details-card hidden">
+                        <h2>Szczegóły Próby</h2>
+                        <div id="details-content" class="details-grid"></div>
+                    </section>
+                    <!-- Płótno z trajektorią i podglądem badania -->
+                    <section id="canvas-panel" class="canvas-card hidden">
+                        <h2>Wizualizacja Ruchu</h2>
+                        <div class="canvas-wrapper">
+                            <!-- WARSTWA 1: Symulacja ekranu badanego -->
+                            <div id="canvas-target-left" class="canvas-target hidden">Opcja A</div>
+                            <div id="canvas-target-right" class="canvas-target hidden">Opcja B</div>
+                            <img id="canvas-stimulus-image" src="" class="hidden">
+                            <h2 id="canvas-stimulus-text" class="hidden"></h2>
+
+                            <!-- WARSTWA 2: Przezroczyste płótno do rysowania -->
+                            <canvas id="trajectory-canvas" width="800" height="600"></canvas>
+                        </div>
+                    </section>
+                    <div id="empty-state" class="empty-state">Wybierz próbę z drzewka...</div>
+                </main>
+            </div>
+
+            <!-- WIDOK 2: KREATOR BADANIA -->
+            <div id="view-create" class="workspace-view hidden" style="padding: 30px; overflow-y: auto; width: 100%;">
+                <div class="card" style="max-width: 800px; margin: 0 auto;">
+                    <h2>Utwórz Nowe Badanie</h2>
+                    <form id="create-experiment-form">
+                        <div class="form-group">
+                            <label>Nazwa badania:</label>
+                            <input type="text" id="exp-name" required placeholder="np. Kategoryzacja Twarzy">
+                        </div>
+                        
+                        <div style="display: flex; gap: 20px; margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                            <div style="flex: 1;">
+                                <label>Lewa odpowiedź (tekst):</label>
+                                <input type="text" id="exp-left-text" required placeholder="np. Kobieta">
+                                <label style="margin-top: 10px;">Znak / Ikona (opcjonalnie):</label>
+                                <input type="text" id="exp-left-symbol" placeholder="np. ♀">
+                            </div>
+                            <div style="flex: 1;">
+                                <label>Prawa odpowiedź (tekst):</label>
+                                <input type="text" id="exp-right-text" required placeholder="np. Mężczyzna">
+                                <label style="margin-top: 10px;">Znak / Ikona (opcjonalnie):</label>
+                                <input type="text" id="exp-right-symbol" placeholder="np. ♂">
+                            </div>
+                        </div>
+
+                        <h3>Bodźce (Obrazki)</h3>
+                        <p style="font-size: 14px; color: #666; margin-bottom: 15px;">Dodaj pliki i przypisz im poprawną stronę.</p>
+                        
+                        <div id="stimuli-list">
+                            <!-- Tutaj JavaScript będzie dodawał wiersze -->
+                        </div>
+                        
+                        <button type="button" id="add-stimulus-btn" class="btn-secondary" style="margin-bottom: 30px;">+ Dodaj kolejny obrazek</button>
+
+                        <button type="submit" id="save-experiment-btn" style="background-color: #28a745;">Zapisz i Utwórz Badanie</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/admin.js"></script>
+</body>
+</html>

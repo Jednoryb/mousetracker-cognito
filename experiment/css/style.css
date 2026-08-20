@@ -1,0 +1,171 @@
+/* Reset podstawowy */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #000000;
+    color: #ffffff;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; /* Czysty, bezszeryfowy font */
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden; /* Blokujemy przewijanie ekranu */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.screen {
+    display: none; /* Domyślnie ukryte */
+    width: 100%;
+    height: 100%;
+    text-align: center;
+}
+
+/* Klasa 'active' pokazuje dany ekran */
+.screen.active {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+h1 { margin-bottom: 20px; font-weight: normal; }
+p { margin-bottom: 10px; line-height: 1.5; color: #cccccc; }
+
+button {
+    background-color: #ffffff;
+    color: #000000;
+    border: none;
+    padding: 15px 30px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 30px;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+button:hover { background-color: #e0e0e0; }
+
+.hidden { display: none !important; }
+
+/* --- Elementy Ekranu Badawczego --- */
+
+#workspace {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.target {
+    position: absolute;
+    top: 5%;
+    padding: 25px 45px; /* Znacznie powiększony obszar kliknięcia */
+    border: 2px solid #ffffff;
+    font-size: 24px; /* Większy tekst */
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px; /* Odstęp między tekstem a symbolem graficznym */
+    min-width: 220px; /* Minimalna szerokość przycisku */
+    border-radius: 8px; /* Delikatne zaokrąglenie */
+    background-color: transparent;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+#target-left { left: 5%; }
+#target-right { right: 5%; }
+
+.target:hover {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+/* Nowa klasa dla znaku graficznego */
+.target-symbol {
+    font-size: 36px; /* Znak jest trochę większy niż sam tekst */
+}
+
+#stimulus-image {
+    max-width: 60%;
+    max-height: 60%;
+    object-fit: contain;
+}
+
+/* Dolny przycisk "Następne" / "Rozpocznij próbę" */
+#next-trial-btn {
+    position: absolute;
+    bottom: 10%;
+}
+
+/* Ostrzeżenie Fullscreen */
+#fullscreen-warning {
+    position: absolute;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.95);
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+/* --- Formularz Ankiety --- */
+#demographics-form {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    text-align: left;
+    width: 100%;
+    max-width: 400px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+label {
+    font-size: 14px;
+    color: #cccccc;
+}
+
+select {
+    background-color: #000000;
+    color: #ffffff;
+    border: 1px solid #555555;
+    padding: 10px;
+    font-size: 16px;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+}
+
+select:focus {
+    border-color: #ffffff;
+}
+
+/* Dostosowanie przycisku w formularzu */
+#demographics-form button {
+    margin-top: 15px;
+}
+
+#stimulus-text {
+    font-size: 32px;
+    font-weight: bold;
+    text-align: center;
+    max-width: 80%;
+    color: #ffffff;
+}

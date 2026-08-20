@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mousetracking - UŁ</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #000000;
+            color: #ffffff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 60px;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: normal;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666666;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        .nav-container {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
+            padding: 0 20px;
+        }
+
+        .nav-link {
+            flex: 1;
+            display: block;
+            padding: 40px 20px;
+            background-color: transparent;
+            border: 1px solid #333333;
+            color: #ffffff;
+            text-decoration: none;
+            transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+        }
+
+        .nav-link h2 {
+            font-size: 18px;
+            font-weight: normal;
+            margin-bottom: 10px;
+        }
+
+        .nav-link p {
+            font-size: 12px;
+            color: #888888;
+            line-height: 1.6;
+        }
+
+        .nav-link:hover {
+            background-color: #ffffff;
+            border-color: #ffffff;
+            color: #000000;
+        }
+
+        .nav-link:hover p {
+            color: #333333;
+        }
+
+        @media (max-width: 600px) {
+            .nav-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>MOUSETRACKING UŁ</h1>
+        <p>KOŁO NAUKOWE KOGNITYWISTYKI</p>
+    </div>
+
+    <div class="nav-container">
+        <a href="experiment/index.html" class="nav-link">
+            <h2>Środowisko badawcze</h2>
+            <p>Moduł testowy dla uczestników eksperymentów.</p>
+        </a>
+
+        <a href="admin/index.html" class="nav-link">
+            <h2>Panel analityczny</h2>
+            <p>Konfiguracja badań i zarządzanie danymi.</p>
+        </a>
+    </div>
+
+</body>
+</html>
