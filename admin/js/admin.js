@@ -1,4 +1,4 @@
-import { supabase } from './config.js';
+import { supabase } from '../../shared/config.js';
 
 const loginScreen = document.getElementById('login-screen');
 const dashboardScreen = document.getElementById('dashboard-screen');

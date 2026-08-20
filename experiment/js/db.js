@@ -1,5 +1,5 @@
 // experiment/js/db.js
-import { supabase } from './config.js';
+import { supabase } from '../../shared/config.js';
 
 // Pobiera pierwszy aktywny eksperyment
 export async function fetchActiveExperiment() {
