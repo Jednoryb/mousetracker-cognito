@@ -1,6 +1,20 @@
 import { enterFullscreen, setupFullscreenProtection, wasFullscreenInterrupted } from './fullscreen.js';
 import { startTracking, stopTracking } from './tracker.js';
-import { fetchActiveExperiment, initSession, saveTrialResult } from './db.js';
+import { fetchActiveExperiment, initSession, saveTrialResult, syncData } from './db.js';
+
+// --- REJESTRACJA SERVICE WORKERA I SYNCHRONIZACJI ---
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+        .then(() => console.log('Service Worker zarejestrowany.'))
+        .catch(err => console.error('Błąd rejestracji SW:', err));
+}
+
+window.addEventListener('load', syncData);
+window.addEventListener('online', () => {
+    console.log("Połączenie przywrócone! Rozpoczynam synchronizację...");
+    syncData();
+});
+// -----------------------------------------------------------
 
 const welcomeScreen = document.getElementById('welcome-screen');
 const experimentScreen = document.getElementById('experiment-screen');
@@ -17,11 +31,18 @@ const stimulusText = document.getElementById('stimulus-text');
 let currentSessionId = null;
 let stimuliList = [];
 let currentTrialIndex = 0;
-let experimentSettings = {}; // Przechowuje konfigurację tekstów i ikon
+let experimentSettings = {}; 
 
 let isCalibrationPhase = true;
 let calibrationTasks = [];
 let currentCalibrationIndex = 0;
+let currentOptionsMapping = 'normal';
+
+// NOWE ZMIENNE DLA ŚCIEŻKI POWROTNEJ
+let isReturnPhase = false;
+let initialTrackingData = null;
+let pendingTrialData = null;
+let pendingStimulusId = null;
 
 setupFullscreenProtection(experimentScreen, fullscreenWarning, resumeBtn);
 
@@ -56,10 +77,11 @@ demographicsForm.addEventListener('submit', async (event) => {
             return;
         }
 
-        // Zapisujemy ustawienia z bazy do zmiennej
         experimentSettings = currentExperiment.settings || {};
         stimuliList = currentExperiment.stimuli.sort((a, b) => a.order_index - b.order_index);
-        currentSessionId = await initSession(currentExperiment.id, demographicsData);
+        
+        currentOptionsMapping = Math.random() > 0.5 ? 'normal' : 'reversed';
+        currentSessionId = await initSession(currentExperiment.id, demographicsData, currentOptionsMapping);
         
         generateCalibrationSequence();
         prepareNextTrial();
@@ -70,88 +92,132 @@ demographicsForm.addEventListener('submit', async (event) => {
 });
 
 function prepareNextTrial() {
+    // Chowamy przyciski docelowe, żeby badany nie uciekł na boki przed startem
+    targetLeft.classList.add('hidden');
+    targetRight.classList.add('hidden');
+    
+    nextTrialBtn.textContent = "Start";
     nextTrialBtn.classList.remove('hidden');
 
     if (isCalibrationPhase) {
-        // --- FAZA KALIBRACJI ---
         const expectedSide = calibrationTasks[currentCalibrationIndex];
         stimulusText.textContent = expectedSide === 'left' ? "Kliknij w lewą odpowiedź" : "Kliknij w prawą odpowiedź";
-        
-        // Zmieniamy teksty na przyciskach (bez ikon)
         targetLeft.innerHTML = 'Lewa odpowiedź';
         targetRight.innerHTML = 'Prawa odpowiedź';
     } else {
-        // --- WŁAŚCIWE BADANIE ---
         const currentStimulus = stimuliList[currentTrialIndex];
         stimulusImage.src = currentStimulus.image_url;
         
-        // Zmieniamy teksty i dodajemy ikony z konfiguracji bazy
-        targetLeft.innerHTML = `
-            <span>${experimentSettings.left_text || 'Opcja A'}</span>
-            <span class="target-symbol">${experimentSettings.left_symbol || ''}</span>
-        `;
+        const useLocal = experimentSettings.use_local_options === true;
+        const activeSettings = (useLocal && currentStimulus.settings) ? currentStimulus.settings : experimentSettings;
+
+        let txtLeft = activeSettings.left_text || 'Opcja A';
+        let symLeft = activeSettings.left_symbol || '';
+        let txtRight = activeSettings.right_text || 'Opcja B';
+        let symRight = activeSettings.right_symbol || '';
+
+        if (currentOptionsMapping === 'reversed') {
+            const tempTxt = txtLeft; const tempSym = symLeft;
+            txtLeft = txtRight; symLeft = symRight;
+            txtRight = tempTxt; symRight = tempSym;
+        }
         
-        // Dla prawego przycisku dajemy ikonę z lewej strony, żeby było symetrycznie
-        targetRight.innerHTML = `
-            <span class="target-symbol">${experimentSettings.right_symbol || ''}</span>
-            <span>${experimentSettings.right_text || 'Opcja B'}</span>
-        `;
+        targetLeft.innerHTML = `<span>${txtLeft}</span> <span class="target-symbol">${symLeft}</span>`;
+        targetRight.innerHTML = `<span class="target-symbol">${symRight}</span> <span>${txtRight}</span>`;
     }
 }
 
+// LOGIKA STARTU I POWROTU NA JEDNYM PRZYCISKU
 nextTrialBtn.addEventListener('click', () => {
-    nextTrialBtn.classList.add('hidden');
-    
-    if (isCalibrationPhase) {
-        stimulusText.classList.remove('hidden');
+    if (isReturnPhase) {
+        // --- ZAKOŃCZENIE FAZY POWROTU ---
+        const returnTrackingData = stopTracking();
+        isReturnPhase = false;
+        nextTrialBtn.classList.add('hidden');
+        
+        // Doklejamy dane powrotne do głównego obiektu
+        initialTrackingData.return_x = returnTrackingData.x;
+        initialTrackingData.return_y = returnTrackingData.y;
+        initialTrackingData.return_t = returnTrackingData.t;
+        
+        // Zapisujemy i przechodzimy dalej
+        finalizeTrialAndCheckNext();
     } else {
-        stimulusImage.classList.remove('hidden');
+        // --- START ZWYKŁEJ PRÓBY ---
+        nextTrialBtn.classList.add('hidden');
+        targetLeft.classList.remove('hidden');
+        targetRight.classList.remove('hidden');
+        
+        if (isCalibrationPhase) stimulusText.classList.remove('hidden');
+        else stimulusImage.classList.remove('hidden');
+        
+        startTracking();
     }
-    
-    startTracking();
 });
 
 async function handleResponse(chosenSide) {
-    if (nextTrialBtn.classList.contains('hidden') === false) return; 
+    if (nextTrialBtn.classList.contains('hidden') === false && !isReturnPhase) return; 
 
-    const trackingData = stopTracking();
+    initialTrackingData = stopTracking();
+    
+    // Czyścimy ekran (ukrywamy nawet przyciski docelowe, żeby wymusić powrót na dół)
     stimulusImage.classList.add('hidden');
     stimulusText.classList.add('hidden');
+    targetLeft.classList.add('hidden');
+    targetRight.classList.add('hidden');
     
-    const responseTime = trackingData.t.length > 0 ? trackingData.t[trackingData.t.length - 1] : 0;
+    const responseTime = initialTrackingData.t.length > 0 ? initialTrackingData.t[initialTrackingData.t.length - 1] : 0;
 
+    // Przygotowanie meta-danych próby
     if (isCalibrationPhase) {
         const expectedSide = calibrationTasks[currentCalibrationIndex];
-        const trialData = {
-            chosenSide: chosenSide,
-            responseTime: responseTime,
-            interrupted: wasFullscreenInterrupted,
-            isCalibration: true,
+        pendingTrialData = {
+            chosenSide: chosenSide, responseTime: responseTime,
+            interrupted: wasFullscreenInterrupted, isCalibration: true,
             expectedAnswer: expectedSide
         };
+        pendingStimulusId = null;
+    } else {
+        const currentStimulus = stimuliList[currentTrialIndex];
+        let correctPhysically = currentStimulus.correct_answer;
         
-        saveTrialResult(currentSessionId, null, trialData, trackingData);
+        if (currentOptionsMapping === 'reversed' && correctPhysically) {
+            correctPhysically = (correctPhysically === 'left') ? 'right' : 'left';
+        }
+
+        pendingTrialData = {
+            chosenSide: chosenSide, responseTime: responseTime,
+            interrupted: wasFullscreenInterrupted, isCalibration: false,
+            expectedAnswer: correctPhysically 
+        };
+        pendingStimulusId = currentStimulus.id;
+    }
+
+    // SPRAWDZENIE: Czy badacz wymaga powrotu do bazy?
+    if (experimentSettings.record_return_path) {
+        isReturnPhase = true;
+        nextTrialBtn.textContent = "Wróć tutaj"; // Pokazujemy przycisk na dole
+        nextTrialBtn.classList.remove('hidden');
+        startTracking(); // Uruchamiamy tracker ponownie!
+    } else {
+        // Jeśli nie, od razu zapisujemy
+        finalizeTrialAndCheckNext();
+    }
+}
+
+// Funkcja pomocnicza zapisująca dane i inkrementująca liczniki
+function finalizeTrialAndCheckNext() {
+    saveTrialResult(currentSessionId, pendingStimulusId, pendingTrialData, initialTrackingData);
+    
+    if (pendingTrialData.isCalibration) {
         currentCalibrationIndex++;
-        
         if (currentCalibrationIndex >= calibrationTasks.length) {
             isCalibrationPhase = false;
             currentTrialIndex = 0;
         }
         prepareNextTrial();
-        
     } else {
-        const currentStimulus = stimuliList[currentTrialIndex];
-        const trialData = {
-            chosenSide: chosenSide,
-            responseTime: responseTime,
-            interrupted: wasFullscreenInterrupted,
-            isCalibration: false,
-            expectedAnswer: currentStimulus.correct_answer
-        };
-        
-        saveTrialResult(currentSessionId, currentStimulus.id, trialData, trackingData);
         currentTrialIndex++;
-        
         if (currentTrialIndex < stimuliList.length) {
             prepareNextTrial();
         } else {
